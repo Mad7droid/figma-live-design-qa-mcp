@@ -1,0 +1,39 @@
+{
+  "name": "figma-live-design-qa-mcp",
+  "version": "0.1.0",
+  "description": "MCP server that compares Figma design tokens with a live page and produces an actionable QA report.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "figma-live-design-qa-mcp": "./dist/index.js"
+  },
+  "keywords": ["figma", "design-qa", "visual-qa", "mcp", "playwright", "design-tokens"],
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "pretest": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "smoke": "tsx scripts/smoke.ts",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "culori": "^4.0.2",
+    "playwright": "^1.62.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/culori": "^2.1.1",
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>drift</title>
+<style>
+  body { margin: 0; background: #ffffff; color: #111111;
+         font-family: Inter, sans-serif; font-size: 16px; font-weight: 400; }
+  /* One character off the real token: the signature of a hardcoded hex. Must be an error. */
+  .near-miss-color { color: #1a73e9; font-size: 16px; }
+  /* Repeated across many elements: one finding, not twenty. */
+  .repeated { color: #1a73e9; font-size: 16px; }
+  /* 15px is not in the token set and is 1px from 14px and 16px. */
+  .odd-size { font-size: 15px; color: #111111; }
+  /* A radius outside the vocabulary, on a box that actually paints. */
+  .odd-radius { background: #1a73e8; border-radius: 13px; width: 200px; height: 40px; }
+  /* A weight outside the vocabulary. */
+  .odd-weight { font-weight: 500; font-size: 16px; color: #111111; }
+</style></head>
+<body>
+  <p class="near-miss-color">Hardcoded blue</p>
+  <p class="repeated">Repeat one</p>
+  <p class="repeated">Repeat two</p>
+  <p class="repeated">Repeat three</p>
+  <p class="odd-size">Odd size</p>
+  <div class="odd-radius"></div>
+  <p class="odd-weight">Odd weight</p>
+</body></html>

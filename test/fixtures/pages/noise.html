@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>noise</title>
+<style>
+  body { margin: 0; font-family: Inter, sans-serif; background: #ffffff; color: #111111; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden;
+             clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+  .offscreen { position: absolute; left: -9999px; width: 200px; height: 40px; background: #ff00ff; }
+  .zero-width { width: 0; height: 40px; background: #ff00ff; }
+  .invisible { visibility: hidden; width: 200px; height: 40px; background: #ff00ff; }
+  .transparent-parent { opacity: 0; }
+  .no-bg { background-color: rgba(0, 0, 0, 0); width: 200px; height: 40px; border-radius: 13px; }
+  .phantom-border { border-width: 0; border-style: solid; width: 200px; height: 40px; color: #ff00ff; }
+  .gradient-text { background: linear-gradient(#f00, #00f); -webkit-background-clip: text;
+                   background-clip: text; -webkit-text-fill-color: transparent; font-size: 20px; }
+  .pill { border-radius: 9999px; background: #1a73e8; width: 200px; height: 40px; }
+  .pill-small { border-radius: 9999px; background: #1a73e8; width: 90px; height: 24px; }
+  .real-radius { border-radius: 8px; background: #1a73e8; width: 200px; height: 40px; }
+  .inherit-host { color: #1a73e8; }
+  .card { background: #ffffff; border: 1px solid #111111; border-radius: 8px; padding: 12px; }
+</style></head>
+<body>
+  <!-- Screen-reader-only text: invisible, but with entirely real computed styles. -->
+  <span class="sr-only" id="sr">Skip to content</span>
+
+  <!-- Off-canvas and zero-size elements paint nothing. -->
+  <div class="offscreen" id="offscreen">off</div>
+  <div class="zero-width" id="zerowidth"></div>
+  <div class="invisible" id="invisible"></div>
+  <div class="transparent-parent"><div id="under-transparent" style="background:#ff00ff;width:100px;height:20px"></div></div>
+
+  <!-- A radius on a fully transparent box rounds nothing visible. -->
+  <div class="no-bg" id="nobg"></div>
+
+  <!-- Chromium reports border-color even where border-width is 0. -->
+  <div class="phantom-border" id="phantom"></div>
+
+  <!-- The painted colour of gradient text is not in `color`. -->
+  <p class="gradient-text" id="gradient">Gradient headline</p>
+
+  <!-- One design decision ("fully rounded"), two different computed px values. -->
+  <div class="pill" id="pill"></div>
+  <div class="pill-small" id="pillsmall"></div>
+  <div class="real-radius" id="radius"></div>
+
+  <!-- `color` set here is inherited by every descendant that has no text of its own. -->
+  <div class="inherit-host" id="host">
+    <div id="wrapper"><div id="inner"><span id="leaf">Real text</span></div></div>
+  </div>
+
+  <div class="card" id="card"><p id="cardtext">Card body text</p></div>
+
+  <!-- One icon, many paths, all inheriting currentColor. -->
+  <svg id="icon" width="24" height="24" viewBox="0 0 24 24" style="color:#1a73e8">
+    <path d="M1 1h4v4H1z" fill="currentColor"/><path d="M6 1h4v4H6z" fill="currentColor"/>
+    <path d="M11 1h4v4h-4z" fill="currentColor"/><path d="M16 1h4v4h-4z" fill="currentColor"/>
+    <path d="M1 6h4v4H1z" fill="currentColor"/><path d="M6 6h4v4H6z" fill="currentColor"/>
+    <path d="M11 6h4v4h-4z" fill="currentColor"/><path d="M16 6h4v4h-4z" fill="currentColor"/>
+    <path d="M1 11h4v4H1z" fill="currentColor"/><path d="M6 11h4v4H6z" fill="currentColor"/>
+    <path d="M11 11h4v4h-4z" fill="currentColor"/><path d="M16 11h4v4h-4z" fill="currentColor"/>
+  </svg>
+
+  <button id="uabutton">A button</button>
+</body></html>

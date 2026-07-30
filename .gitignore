@@ -1,0 +1,14 @@
+node_modules/
+dist/
+runs/
+baselines/
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+credentials/
+*.pem
+*.key
+reports/
+coverage/

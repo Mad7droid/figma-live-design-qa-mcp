@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>clean</title>
+<style>
+  /* Built entirely from the fixture token set. A correct implementation must report
+     ZERO findings here — this is the precision acceptance bar. */
+  body { margin: 0; background: #ffffff; color: #111111;
+         font-family: Inter, sans-serif; font-size: 16px; font-weight: 400; }
+  h1 { font-size: 24px; font-weight: 600; color: #111111; margin: 0 0 16px; }
+  .card { background: #ffffff; border: 1px solid #111111; border-radius: 8px;
+          padding: 16px; width: 400px; }
+  .cta { background: #1a73e8; color: #ffffff; border: 0; border-radius: 8px;
+         font-size: 14px; font-weight: 600; padding: 8px 16px; }
+  .muted { color: #111111; font-size: 14px; font-weight: 400; }
+  /* Deliberate noise that must all be filtered out rather than reported. */
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden;
+             clip-path: inset(50%); }
+  .ghost { background-color: rgba(0, 0, 0, 0); border-radius: 13px;
+           width: 200px; height: 40px; }
+  .pill { background: #1a73e8; border-radius: 9999px; width: 120px; height: 32px; }
+</style></head>
+<body>
+  <h1>Clean page</h1>
+  <div class="card">
+    <p class="muted">Body copy using only design tokens.</p>
+    <button class="cta">Primary action</button>
+  </div>
+  <span class="sr-only">Hidden helper text</span>
+  <div class="ghost"></div>
+  <div class="pill"></div>
+</body></html>

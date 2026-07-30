@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>iframes</title>
+<style>
+  body { margin: 0; font-family: Inter, sans-serif; }
+  /* Deliberate border + padding: the walker must add the content-box origin, not the
+     border-box origin, when translating in-frame coordinates to page coordinates. */
+  #same { position: absolute; left: 50px; top: 100px; width: 400px; height: 200px;
+          border: 5px solid #111111; padding: 10px; box-sizing: content-box; }
+  #cross { position: absolute; left: 50px; top: 400px; width: 300px; height: 150px; border: 0; }
+</style></head>
+<body>
+  <iframe id="same" src="/inner.html"></iframe>
+  <!-- Served from a second port, so contentDocument access throws SecurityError. One
+       uncaught throw would abort the entire page.evaluate. -->
+  <iframe id="cross" src="CROSS_ORIGIN_SRC"></iframe>
+</body></html>

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>shadow</title>
+<style>body{margin:0;font-family:Inter,sans-serif}</style></head>
+<body>
+  <div id="top">
+    <x-open id="open"><span id="slotted">Slotted light child</span></x-open>
+    <x-closed id="closed"></x-closed>
+    <x-nested id="nested"></x-nested>
+  </div>
+
+  <script>
+    // Open root with a <slot>. Assigned nodes stay in the light tree, so a walker that
+    // descends both trees must not count them twice.
+    customElements.define('x-open', class extends HTMLElement {
+      constructor() {
+        super();
+        const root = this.attachShadow({ mode: 'open' });
+        root.innerHTML = '<div id="open-inner" style="color:#1a73e8;width:200px;height:30px">' +
+                         'Open shadow text<slot></slot></div>';
+      }
+    });
+
+    // element.shadowRoot is null here; only the attachShadow patch can reach it.
+    customElements.define('x-closed', class extends HTMLElement {
+      constructor() {
+        super();
+        const root = this.attachShadow({ mode: 'closed' });
+        root.innerHTML = '<div id="closed-inner" style="color:#ff0000;width:200px;height:30px">' +
+                         'Closed shadow text</div>';
+      }
+    });
+
+    customElements.define('x-inner', class extends HTMLElement {
+      constructor() {
+        super();
+        const root = this.attachShadow({ mode: 'open' });
+        root.innerHTML = '<p id="deep" style="color:#00aa00;width:200px;height:30px">Nested twice</p>';
+      }
+    });
+
+    customElements.define('x-nested', class extends HTMLElement {
+      constructor() {
+        super();
+        const root = this.attachShadow({ mode: 'open' });
+        root.innerHTML = '<div id="nest-wrap" style="width:200px;height:40px"><x-inner></x-inner></div>';
+      }
+    });
+  </script>
+</body></html>
