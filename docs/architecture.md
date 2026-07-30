@@ -1,20 +1,24 @@
-# Architecture
+# How it works
 
-The server is a local stdio MCP process with four measurement stages:
+You can think of the server as a small design-review assistant with four jobs:
 
-1. **Design capture** fetches the selected Figma frame, flattens relevant nodes, and derives token sets from the Variables API, variable/style bindings, or repeated frame values.
-2. **Build capture** opens the live page in an authenticated Playwright session, traverses the DOM, shadow roots, and same-origin iframes, and records computed values.
-3. **Token analysis** canonicalizes colors, sizes, weights, radii, and font families; filters browser noise; groups findings; and applies confidence-aware severity.
-4. **Report generation** captures useful build and Figma crops, writes JSON artifacts, and creates a self-contained HTML report.
+1. **Read the Figma frame** and work out which colors, type styles, fonts, and radii look like part of the system.
+2. **Read the live page** in the browser, including useful content inside shadow roots and same-origin iframes.
+3. **Compare the two** while filtering out browser noise, hidden elements, inherited styles, and other things that should not become design feedback.
+4. **Make a report** with grouped findings and useful screenshots.
 
-The orchestrator runs all four stages and preserves the `runId` if a stage fails. Granular tools can resume from saved artifacts.
+The usual `run_design_qa` tool does all four. The smaller tools let you retry one part when needed.
 
-## Precision model
+## Why it does not guess
 
-Token confidence is tracked per dimension using `variables-api`, `bound`, `bound-partial`, `frequency`, or `not_verified`. A low-confidence dimension does not produce speculative findings.
+Some Figma files have rich variables and styles. Others are still being cleaned up. The server keeps a confidence level for each dimension and says `not_verified` when the frame does not provide enough evidence.
 
-Near-miss values are more actionable than distant values: a one-pixel or one-channel deviation often indicates hardcoded drift, while a distant value may belong to a widget, image, or state absent from the frame.
+That is a feature: a short list of trustworthy feedback is more useful than a wall of false alarms.
 
-## Storage and lifecycle
+Near matches are especially interesting. A color that is one channel away from the design color often means someone typed a value by hand. A completely different color may be a widget, an image, or an intentional state.
 
-The default storage root is `~/.figma-live-design-qa-mcp/`. Run data is cleaned after 14 days and capped at 2 GB. Browser sessions are held briefly so report generation can crop the exact captured page; only browsers launched by the server are closed during shutdown.
+## Where the work happens
+
+The browser session and run files stay local. By default they live under `~/.figma-live-design-qa-mcp/`. Old run data is cleaned up after 14 days and the run store is capped at 2 GB.
+
+The server keeps the captured page open briefly so the report can take screenshots from the exact same render. It only closes browsers that it started itself.

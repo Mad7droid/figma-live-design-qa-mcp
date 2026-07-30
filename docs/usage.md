@@ -1,34 +1,53 @@
 # Usage
 
-## End-to-end check
+## The quick version
 
-Give the MCP client a Figma frame link containing `node-id` and the live page URL:
+In Figma, choose **Copy link to selection** for a frame. Then ask Claude:
 
-> Run design QA on `https://www.figma.com/design/FILE_KEY/File?node-id=12-34` against `https://staging.example.com/checkout`.
+> Compare `https://www.figma.com/design/FILE_KEY/File?node-id=12-34` with `https://staging.example.com/checkout` and create a design QA report.
 
-The server captures the selected frame, measures the page at the frame width, compares token values, and writes an HTML report.
+Claude runs the check, and the HTML report appears in `~/Documents/Design QA/`.
 
-## Granular workflow
+## A better prompt
 
-Use the tools individually when you need to retry one stage:
+Include the details that affect how the page should look:
 
-1. `capture_design` with a frame link or file key plus `nodeId`.
-2. `capture_build` with the returned `runId` and build URL.
-3. `check_tokens` with the `runId`.
-4. `build_report` with the `runId`.
+```text
+Run design QA for this page.
 
-`capture_build` defaults to the Figma frame width. Pass `viewportWidth` when a different viewport is intentional.
+Figma: [frame link]
+Live page: [build link]
+Viewport: [frame width or mobile/desktop]
+Theme: [light/dark]
+Locale: [locale]
+Intentional differences: [anything Claude should ignore]
 
-## Findings
+Compare colors, type, font loading, and radii. Prioritize likely hardcoded drift,
+and tell me when the Figma frame does not provide enough evidence to check something.
+Create the HTML report when finished.
+```
 
-Findings are grouped by canonical value rather than emitted once per DOM element. Each finding includes severity, nearest design value, occurrence count, and a human-readable location. The model receives a compact summary; detailed machine paths remain in the run artifacts and report.
+## If you need to retry one part
 
-Dimensions with insufficient evidence are listed under `notVerified`. This is expected for files without enough bound or repeated values.
+The one-click workflow is:
 
-## Dismissing an exception
+1. `capture_design` reads the Figma frame.
+2. `capture_build` reads the live page.
+3. `check_tokens` compares the values.
+4. `build_report` creates the report.
 
-Pass a finding hash from `check_tokens` or the report to `dismiss_finding`, optionally with a reason. The exception is stored per Figma file and suppressed on future runs.
+If a step fails, use the returned `runId` to rerun that step. You do not need to start from scratch.
 
-## Artifacts
+## Reading the findings
 
-Each run stores JSON artifacts under `DESIGN_QA_HOME/runs/<runId>/`. The shareable HTML report is also copied to `DESIGN_QA_REPORT_DIR`, which defaults to `~/Documents/Design QA/`.
+Findings are grouped by value, so one hardcoded color used in 30 places appears as one useful issue rather than 30 separate alerts. You will see the severity, the closest design value, how often it appears, and where to look.
+
+`notVerified` means “we did not have enough evidence to make a fair call.” It is a useful prompt to choose a better reference frame or check the theme — it is not automatically a failure.
+
+## Dismissing a known exception
+
+If something is intentionally different, use `dismiss_finding` with the finding hash and a short reason. The exception is remembered for future checks against that Figma file.
+
+## Reports and files
+
+The HTML report is designed to be opened and shared on its own. Detailed run JSON lives under `DESIGN_QA_HOME/runs/<runId>/`; the default is `~/.figma-live-design-qa-mcp/runs/`.

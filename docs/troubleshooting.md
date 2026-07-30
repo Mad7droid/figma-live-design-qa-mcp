@@ -1,29 +1,42 @@
 # Troubleshooting
 
-## Missing Figma token
+## “No Figma access token found”
 
-Set `FIGMA_TOKEN` in the MCP client’s `env` block and restart the client. Use a token with **File content: read** permission. Do not put the token in a URL, source file, or shell history.
+Add `FIGMA_TOKEN` to the MCP server’s `env` block, then restart Claude Desktop. The token needs **File content: read** permission.
 
-## No frame selected
+Do not put the token in a prompt, URL, source file, or shell history.
 
-Copy the link to a specific frame or pass `nodeId` separately. A file URL without a frame selection cannot define the viewport or token set.
+## “No frame selected”
 
-## Login wall or wrong page measured
+In Figma, select the actual frame and use **Copy link to selection**. A link to the whole file does not tell the server which screen to use.
 
-Start Chrome with CDP, sign in to the target site in that window, and rerun `capture_build`. A login-wall warning means the captured page should not be trusted as the target build.
+## Claude measured a login page
 
-## Chrome connection failure
+Start Chrome with remote debugging, sign in to the site in that Chrome window, and run the check again. A login-wall warning means the result is not a trustworthy read of the intended page.
 
-Confirm Chrome is running with `--remote-debugging-port=9222`. For a custom endpoint, set `DESIGN_QA_CDP_PORT` or `DESIGN_QA_CDP_URL` in the MCP environment.
+## Claude cannot connect to Chrome
 
-## Color dimension is not verified
+Check that Chrome was started with:
 
-The Figma frame and live page may be rendering different light/dark modes, or the frame may not contain enough reliable color evidence. Fix the mode or inspect the `notVerified` reason before treating the result as a failure.
+```bash
+--remote-debugging-port=9222
+```
 
-## Report has no screenshots
+If you use another port or machine, set `DESIGN_QA_CDP_PORT` or `DESIGN_QA_CDP_URL` in the MCP environment.
 
-The captured browser session may have expired before `build_report`. Rerun the build capture and report stages. The JSON findings remain usable even without crops.
+## Colors say `not_verified`
 
-## Tests fail after a clean install
+The Figma frame and page may be using different themes, or the frame may not show enough reliable color values. Check light/dark mode first, then try a more representative frame.
 
-Run `npx playwright install chromium`, then rerun `npm test`. The DOM and end-to-end suites use Chromium.
+## The report has no screenshots
+
+The browser session may have expired before `build_report` ran. Capture the build again and rebuild the report. The findings JSON is still useful.
+
+## Tests fail after setup
+
+Install the browser dependency and try again:
+
+```bash
+npx playwright install chromium
+npm test
+```

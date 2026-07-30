@@ -1,23 +1,31 @@
 # Figma Live Design QA MCP
 
-Figma Live Design QA MCP compares the design tokens in a Figma frame with the values rendered by a live web page. It reports actionable deviations in colors, typography, font loading, and corner radii without relying on a pixel diff.
+Figma Live Design QA MCP helps you answer a simple question:
 
-It is a local stdio MCP server designed for Claude Desktop and other MCP clients that can launch local processes.
+**Does the page we built still look and feel like the design?**
 
-## Why it exists
+Give it a Figma frame and a live page. It checks the design details that should match — colors, type, fonts, and corner radii — then gives you a shareable HTML report.
 
-Figma frames usually contain placeholder content while live pages contain real content, so screenshots are rarely pixel-identical. This server measures the values that should remain consistent, groups repeated deviations, and writes a self-contained HTML report.
+It is made for designers, design engineers, and frontend teams who want a quick way to catch “almost right” details before handoff or release. You do not need to be a developer to use the actual QA workflow. A little setup is needed the first time.
 
-Its precision-first rules intentionally prefer a missed issue over a noisy false positive:
+## What it checks
 
-- inferred token sets are confidence-scored per dimension;
-- near-miss values are treated as stronger evidence than distant values;
-- inherited, invisible, SVG-internal, and browser-generated styles are filtered;
-- uncertain dimensions are reported as `not_verified`, not guessed.
+- Colors and near-match colors
+- Font family loading
+- Font sizes and weights
+- Border radii, including pills
+- Repeated issues, with useful locations in the page
+- A report with design and build screenshots where available
+
+It does not do a pixel-perfect screenshot diff. That is intentional: Figma often uses placeholder content while the real page uses live data, so pixel diffs can create a lot of noise.
 
 ## Setup
 
-Requires Node.js 20+.
+You only need to do this once.
+
+### 1. Install the project
+
+You need Node.js 20 or newer. From this folder, run:
 
 ```bash
 npm install
@@ -25,13 +33,17 @@ npx playwright install chromium
 npm run build
 ```
 
-Create a Figma personal access token with **File content: read** permission. Put it in the MCP client configuration as an environment variable; never commit it to this repository. See [Security](docs/security.md).
+### 2. Create a Figma token
 
-### Add it to Claude Desktop
+Create a Figma personal access token with **File content: read** permission. You will add it to Claude’s configuration in the next step.
 
-1. Build the server using the commands above.
-2. Open Claude Desktop settings and choose **Developer → Edit Config**.
-3. Add the server to the `mcpServers` object. Replace the example path with the absolute path to this checkout:
+Keep it private: do not paste it into a Figma URL, a prompt, a screenshot, or a GitHub file. See [Security](docs/security.md).
+
+### 3. Add the server to Claude Desktop
+
+1. Open Claude Desktop.
+2. Go to **Settings → Developer → Edit Config**.
+3. Add this inside the `mcpServers` object. Replace the example path with the real path to this project:
 
    ```json
    {
@@ -45,26 +57,28 @@ Create a Figma personal access token with **File content: read** permission. Put
    }
    ```
 
-4. Save the configuration and restart Claude Desktop.
-5. Confirm the MCP server is available in Claude before running a check.
+4. Save the file and restart Claude Desktop.
+5. Check that Claude can see the Figma Live Design QA tools.
 
-For a staging site that requires authentication, start Chrome with remote debugging, sign in, and leave that window open:
+### 4. If your site needs a login
+
+Start Chrome with remote debugging, sign in to your staging site in that window, and leave it open:
 
 ```bash
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
 ```
 
-See [Setup](docs/setup.md) for alternate CDP endpoints and [Security](docs/security.md) for credential handling.
+The server reuses that signed-in session. It does not ask for or store your password. More setup details are in [Setup](docs/setup.md).
 
 ## How to use it in Claude
 
-1. Copy a link to a specific Figma frame using **Copy link to selection**. The link should include a `node-id`.
-2. Open the corresponding route in your local, preview, staging, or production-like build.
-3. Tell Claude to compare the two links. Include the viewport, theme, locale, and any intentional exceptions when they matter.
-4. Review the findings and the generated report in `~/Documents/Design QA/`.
-5. Use `dismiss_finding` only for known, intentional exceptions; include a reason so the baseline remains understandable.
+1. In Figma, select the frame you want to check and choose **Copy link to selection**.
+2. Open the matching page in your local, preview, or staging build.
+3. Paste both links into Claude and ask for a design QA check.
+4. Tell Claude about anything important: viewport, theme, locale, or intentional exceptions.
+5. Open the HTML report from `~/Documents/Design QA/`.
 
-Sample prompt:
+### Sample prompt
 
 ```text
 Run design QA for this checkout page.
@@ -75,68 +89,70 @@ Viewport: use the Figma frame width
 Theme: light
 Locale: en-US
 
-Compare colors, font family, font size, font weight, and border radius. Treat near-token
-deviations as high priority, explain which values are intentional versus likely hardcoded,
-and generate the self-contained HTML report. If a dimension cannot be verified confidently,
-call that out instead of guessing.
+Compare the colors, font family, font size, font weight, and border radius. Highlight
+near-token differences as likely hardcoded drift, explain what looks intentional, and
+generate the self-contained HTML report. If a dimension cannot be checked confidently,
+say that clearly instead of guessing.
 ```
 
-You can also start with the shorter form:
+Short version:
 
 > Run design QA on `https://www.figma.com/design/FILE_KEY/File?node-id=12-34` against `https://staging.example.com/checkout`.
 
-## Tune the check to your design system
+If one stage has a problem, Claude gets a `runId` so it can retry that stage instead of starting over.
 
-The server can only judge what the selected frame proves. Results will be more useful when the frame is representative of the system and its values are bound to Figma variables or published styles. Depending on your design system, adjust the information you give Claude and the frame you select:
+## Make it fit your design system
 
-- use a frame that includes the relevant color, type, and radius vocabulary;
-- specify the intended theme, breakpoint, locale, and font-loading state;
-- mention product-specific exceptions such as third-party widgets, marketing illustrations, or intentionally bespoke display text;
-- treat `not_verified` as a signal to improve the design evidence, not as a failed check;
-- do not expect pixel-perfect matching when the design and build intentionally use different content or responsive states.
+The quality of the result depends on the frame you choose. Think of the Figma frame as the reference board for the check.
 
-The comparison currently covers colors, font family loading, font sizes, font weights, and border radii. It does not validate copy, geometry, line-height, or pseudo-element styles.
+- Pick a frame that shows the colors, type styles, and radii you care about.
+- Make sure important values are connected to Figma variables or published styles when possible.
+- Tell Claude which theme, breakpoint, locale, and font-loading state to use.
+- Call out things that are intentionally different, like third-party widgets or bespoke marketing artwork.
+- If a dimension says `not_verified`, it means there was not enough design evidence to make a fair call — not that the page failed.
 
-## Export and share the result
+The check currently covers colors, font loading, font sizes, font weights, and border radii. It does not check copy, layout geometry, line-height, or pseudo-element styles.
 
-The server creates a self-contained HTML report that can be opened offline. If you use Claude Cowork for the broader review workflow, ask it to read the report, summarize the highest-priority issues, and export the result as an HTML, DOC/DOCX, or PDF file for your team. For example:
+## Share the result
 
-> Review the generated design QA report. Preserve the finding values and occurrence counts, group issues by severity and design-system dimension, add a short executive summary, and export the final review as both an HTML file and a PDF. Do not include or repeat any API tokens, credentials, cookies, or private configuration values.
+The report is a self-contained HTML file you can open without the app running. If you use Claude Cowork for review and handoff, ask it to read the report, summarize the biggest issues, and export the review as HTML, DOC/DOCX, or PDF.
 
-Review reports before sharing: they may contain private product copy, URLs, and screenshots from the build.
+For example:
 
-## MCP tools
+> Review the design QA report. Group the findings by severity and design-system dimension, keep the original values and occurrence counts, add a short summary for designers and product, and export the review as an HTML file and a PDF. Do not include API tokens, cookies, credentials, or private configuration values.
 
-| Tool | Purpose |
+Please review reports before sharing. They can contain private product copy, URLs, and screenshots from the build.
+
+## The tools, in plain English
+
+| Tool | What it does |
 | --- | --- |
-| `run_design_qa` | Runs the complete capture, comparison, and report pipeline. |
-| `capture_design` | Fetches a Figma frame and derives its token set. |
-| `capture_build` | Measures a live page in the user’s authenticated browser session. |
-| `check_tokens` | Compares the build against the design and returns grouped findings. |
-| `build_report` | Writes a self-contained HTML report and JSON artifact. |
-| `dismiss_finding` | Baselines a known exception for the Figma file. |
+| `run_design_qa` | Does the whole check in one go. This is the usual starting point. |
+| `capture_design` | Reads the selected Figma frame. |
+| `capture_build` | Reads the live page in your browser session. |
+| `check_tokens` | Compares the page values with the design values. |
+| `build_report` | Creates the HTML report and JSON details. |
+| `dismiss_finding` | Remembers a known, intentional exception for that Figma file. |
 
-If an end-to-end run fails, it returns the saved `runId`; use the granular tools to resume from the failed stage.
-
-## Browser sessions
-
-For sites behind authentication, the server first attaches to Chrome over CDP and otherwise uses a temporary copy of the Chrome profile. It never asks for or stores a password. Start Chrome with remote debugging on macOS when needed:
-
-```bash
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
-```
-
-Then sign in to the target site in that Chrome window and run the check again. See [Setup](docs/setup.md) and [Troubleshooting](docs/troubleshooting.md).
-
-## Reports and storage
+## Where files go
 
 - Reports: `~/Documents/Design QA/`
-- Run artifacts: `~/.figma-live-design-qa-mcp/runs/`
-- Baselines: `~/.figma-live-design-qa-mcp/baselines/`
+- Run details: `~/.figma-live-design-qa-mcp/runs/`
+- Dismissed findings: `~/.figma-live-design-qa-mcp/baselines/`
 
-Override local storage with `DESIGN_QA_HOME` and `DESIGN_QA_REPORT_DIR`. Runs older than 14 days are cleaned up and the run store is capped at 2 GB.
+You can change these locations with `DESIGN_QA_HOME` and `DESIGN_QA_REPORT_DIR`.
 
-## Documentation
+## For the technical folks
+
+```bash
+npm test
+npm run typecheck
+npm run build
+```
+
+The project is a local stdio MCP server. It uses Playwright to read the live page, stores detailed run data locally, and keeps the model response compact so large DOM trees do not flood the conversation.
+
+More detail:
 
 - [Setup](docs/setup.md)
 - [Usage](docs/usage.md)
@@ -144,24 +160,12 @@ Override local storage with `DESIGN_QA_HOME` and `DESIGN_QA_REPORT_DIR`. Runs ol
 - [Troubleshooting](docs/troubleshooting.md)
 - [Security](docs/security.md)
 
-## Development
+## A few things to know
 
-```bash
-npm test          # typecheck, then run all tests
-npm run typecheck
-npm run build
-```
-
-The test suite covers token inference, color math, precision filters, shadow DOM and iframe traversal, MCP protocol behavior, end-to-end findings, baselines, and self-contained reports.
-
-## Known limitations
-
-- No copy or geometry matching between Figma nodes and DOM elements.
-- Pseudo-element styles are not traversed.
-- `line-height` is captured but intentionally not compared.
+- Figma and the live page can use different content and still pass the useful parts of the check.
 - Cross-origin iframe contents are skipped.
-- A mode mismatch can mark color comparison as `not_verified`.
-- The Variables REST endpoint is Enterprise-only; bound-value and frequency fallbacks are supported for other plans.
+- A light/dark mode mismatch can make color comparison `not_verified`.
+- The Variables REST endpoint is Enterprise-only; the server also works from bound values and repeated values in other plans.
 
 ## License
 

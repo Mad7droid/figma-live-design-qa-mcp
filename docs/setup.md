@@ -1,13 +1,17 @@
 # Setup
 
-## Requirements
+This page is for the first-time setup. Once this is done, most people can work entirely from Claude.
+
+## What you need
 
 - Node.js 20 or newer
 - A Figma personal access token with **File content: read** permission
 - Chromium installed through Playwright
-- Claude Desktop or another MCP client that supports local stdio servers
+- Claude Desktop, or another MCP client that can run a local server
 
-Install and build:
+## Install it
+
+From the project folder:
 
 ```bash
 npm install
@@ -15,9 +19,9 @@ npx playwright install chromium
 npm run build
 ```
 
-## Configure the MCP client
+## Add it to Claude Desktop
 
-Use an absolute path to `dist/index.js`:
+Open **Settings → Developer → Edit Config** and add:
 
 ```json
 {
@@ -31,19 +35,21 @@ Use an absolute path to `dist/index.js`:
 }
 ```
 
-`FIGMA_PERSONAL_ACCESS_TOKEN` is also accepted for compatibility. The token is read from the process environment only.
+Replace the path and token placeholder, save the file, and restart Claude Desktop.
 
-## Authenticated staging sites
+`FIGMA_PERSONAL_ACCESS_TOKEN` also works if that is the name your team already uses. The token is read from the environment only.
 
-Start Chrome with CDP enabled, sign in normally, and leave that window running:
+## Pages behind a login
+
+Start Chrome with CDP enabled, sign in as usual, and leave that window open:
 
 ```bash
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
 ```
 
-Set `DESIGN_QA_CDP_PORT` or `DESIGN_QA_CDP_URL` only when Chrome is using a different endpoint.
+Use `DESIGN_QA_CDP_PORT` or `DESIGN_QA_CDP_URL` if Chrome is running somewhere else.
 
-## Local validation
+## Check the setup
 
 ```bash
 npm test
