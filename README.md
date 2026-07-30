@@ -15,7 +15,7 @@ Its precision-first rules intentionally prefer a missed issue over a noisy false
 - inherited, invisible, SVG-internal, and browser-generated styles are filtered;
 - uncertain dimensions are reported as `not_verified`, not guessed.
 
-## Quick start
+## Setup
 
 Requires Node.js 20+.
 
@@ -27,25 +27,83 @@ npm run build
 
 Create a Figma personal access token with **File content: read** permission. Put it in the MCP client configuration as an environment variable; never commit it to this repository. See [Security](docs/security.md).
 
-Example Claude Desktop configuration:
+### Add it to Claude Desktop
 
-```json
-{
-  "mcpServers": {
-    "figma-live-design-qa": {
-      "command": "node",
-      "args": ["/absolute/path/to/figma-live-design-qa-mcp/dist/index.js"],
-      "env": { "FIGMA_TOKEN": "figd_your_token_here" }
-    }
-  }
-}
+1. Build the server using the commands above.
+2. Open Claude Desktop settings and choose **Developer → Edit Config**.
+3. Add the server to the `mcpServers` object. Replace the example path with the absolute path to this checkout:
+
+   ```json
+   {
+     "mcpServers": {
+       "figma-live-design-qa": {
+         "command": "node",
+         "args": ["/absolute/path/to/figma-live-design-qa-mcp/dist/index.js"],
+         "env": { "FIGMA_TOKEN": "figd_your_token_here" }
+       }
+     }
+   }
+   ```
+
+4. Save the configuration and restart Claude Desktop.
+5. Confirm the MCP server is available in Claude before running a check.
+
+For a staging site that requires authentication, start Chrome with remote debugging, sign in, and leave that window open:
+
+```bash
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
 ```
 
-Ask your MCP client:
+See [Setup](docs/setup.md) for alternate CDP endpoints and [Security](docs/security.md) for credential handling.
+
+## How to use it in Claude
+
+1. Copy a link to a specific Figma frame using **Copy link to selection**. The link should include a `node-id`.
+2. Open the corresponding route in your local, preview, staging, or production-like build.
+3. Tell Claude to compare the two links. Include the viewport, theme, locale, and any intentional exceptions when they matter.
+4. Review the findings and the generated report in `~/Documents/Design QA/`.
+5. Use `dismiss_finding` only for known, intentional exceptions; include a reason so the baseline remains understandable.
+
+Sample prompt:
+
+```text
+Run design QA for this checkout page.
+
+Figma frame: https://www.figma.com/design/FILE_KEY/Checkout?node-id=12-34
+Live page: https://staging.example.com/checkout
+Viewport: use the Figma frame width
+Theme: light
+Locale: en-US
+
+Compare colors, font family, font size, font weight, and border radius. Treat near-token
+deviations as high priority, explain which values are intentional versus likely hardcoded,
+and generate the self-contained HTML report. If a dimension cannot be verified confidently,
+call that out instead of guessing.
+```
+
+You can also start with the shorter form:
 
 > Run design QA on `https://www.figma.com/design/FILE_KEY/File?node-id=12-34` against `https://staging.example.com/checkout`.
 
-The generated report is saved under `~/Documents/Design QA/` by default.
+## Tune the check to your design system
+
+The server can only judge what the selected frame proves. Results will be more useful when the frame is representative of the system and its values are bound to Figma variables or published styles. Depending on your design system, adjust the information you give Claude and the frame you select:
+
+- use a frame that includes the relevant color, type, and radius vocabulary;
+- specify the intended theme, breakpoint, locale, and font-loading state;
+- mention product-specific exceptions such as third-party widgets, marketing illustrations, or intentionally bespoke display text;
+- treat `not_verified` as a signal to improve the design evidence, not as a failed check;
+- do not expect pixel-perfect matching when the design and build intentionally use different content or responsive states.
+
+The comparison currently covers colors, font family loading, font sizes, font weights, and border radii. It does not validate copy, geometry, line-height, or pseudo-element styles.
+
+## Export and share the result
+
+The server creates a self-contained HTML report that can be opened offline. If you use Claude Cowork for the broader review workflow, ask it to read the report, summarize the highest-priority issues, and export the result as an HTML, DOC/DOCX, or PDF file for your team. For example:
+
+> Review the generated design QA report. Preserve the finding values and occurrence counts, group issues by severity and design-system dimension, add a short executive summary, and export the final review as both an HTML file and a PDF. Do not include or repeat any API tokens, credentials, cookies, or private configuration values.
+
+Review reports before sharing: they may contain private product copy, URLs, and screenshots from the build.
 
 ## MCP tools
 
