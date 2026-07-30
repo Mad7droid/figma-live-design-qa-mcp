@@ -115,7 +115,11 @@ The check currently covers colors, font loading, font sizes, font weights, and b
 
 ## Share the result
 
-The report is a self-contained HTML file you can open without the app running. If you use Claude Cowork for review and handoff, ask it to read the report, summarize the biggest issues, and export the review as HTML, DOC/DOCX, or PDF.
+The report is a self-contained HTML file you can open without the app running. It includes a full render of the selected Figma frame — including placed images and image fills — fetched directly through the Figma API, plus smaller design references next to relevant findings.
+
+If the Figma preview is missing, check that the token has **File content: read** permission and that the server can reach `api.figma.com`. The MCP does not need to open the Figma editor in a browser to capture the design image.
+
+If you use Claude Cowork for review and handoff, ask it to read the report, summarize the biggest issues, and export the review as HTML, DOC/DOCX, or PDF.
 
 For example:
 

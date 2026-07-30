@@ -19,6 +19,8 @@ export interface RenderInput {
   findings: FindingsDoc;
   buildCrops: Map<string, string[]>;
   figmaCrops: Map<string, { base64: string; nodeName: string }[]>;
+  /** Full-frame render from Figma's image API, including image fills and placed assets. */
+  figmaPreview: string | null;
   generatedAt: string;
 }
 
@@ -147,6 +149,10 @@ padding:1px 5px;border-radius:4px}
 .strip figure{margin:0;flex:0 0 auto;max-width:320px}
 .strip img{max-width:320px;max-height:240px;border:1px solid var(--line);border-radius:6px;display:block}
 .strip figcaption{font-size:11px;color:var(--muted);margin-top:5px;max-width:320px}
+.reference{margin:28px 0}.reference h2{margin:0 0 12px}.reference figure{margin:0}
+.reference img{max-width:100%;max-height:720px;object-fit:contain;object-position:top left;
+border:1px solid var(--line);border-radius:8px;display:block;background:#fff}
+.reference figcaption{font-size:11px;color:var(--muted);margin-top:6px}
 .muted{color:var(--muted);font-size:13px}
 footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--line);
 color:var(--muted);font-size:12px}
@@ -166,6 +172,10 @@ ${build.stats.truncated ? `<p class="nv">⚠ The page exceeded the element budge
   <div><strong>${design.nodes.length}</strong>design nodes</div>
   <div><strong>${findings.counts.suppressed}</strong>suppressed</div>
 </div>
+${input.figmaPreview
+    ? `<section class="reference"><h2>Figma reference</h2>
+<figure><img src="data:image/png;base64,${input.figmaPreview}" alt="Figma reference frame"><figcaption>The selected Figma frame, rendered directly by the Figma API.</figcaption></figure></section>`
+    : ''}
 <div class="badges">${Object.entries(findings.tiers).map(([d, t]) => tierBadge(d, t)).join('')}</div>
 ${notVerified}
 ${body || '<section class="group"><h2>No deviations found</h2><p class="muted">Every measured value matched the design token set.</p></section>'}

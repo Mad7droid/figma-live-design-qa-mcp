@@ -5,6 +5,7 @@ import { getSession } from '../browser/session.js';
 import { MAX_REPORT_BYTES, REPORT_OUT_DIR } from '../config.js';
 import { log } from '../log.js';
 import { captureBuildCrops, captureFigmaCrops } from '../report/crops.js';
+import { renderNodes } from '../figma/images.js';
 import { renderReport } from '../report/render.js';
 import { advanceStage, ensureRunDir, requireBuild, requireDesign, requireFindings } from '../store/run.js';
 import type { Finding } from '../types.js';
@@ -19,7 +20,7 @@ export interface BuildReportOutput {
   runCopy: string;
   jsonPath: string;
   bytes: number;
-  images: { buildCrops: number; figmaCrops: number; unresolved: number };
+  images: { buildCrops: number; figmaCrops: number; figmaPreview: boolean; unresolved: number };
   summary: string;
 }
 
@@ -47,6 +48,7 @@ export async function buildReport(input: BuildReportInput): Promise<BuildReportO
     session?.page ?? null,
     findings.findings,
   );
+  const figmaPreview = (await renderNodes(design.fileKey, [design.nodeId])).get(design.nodeId) ?? null;
   const figmaCrops = await captureFigmaCrops(design, findings.findings).catch((err) => {
     log.warn('could not render Figma reference crops', (err as Error).message);
     return new Map<string, { base64: string; nodeName: string }[]>();
@@ -58,6 +60,7 @@ export async function buildReport(input: BuildReportInput): Promise<BuildReportO
     findings,
     buildCrops,
     figmaCrops,
+    figmaPreview,
     generatedAt: new Date().toLocaleString(),
   });
 
@@ -69,6 +72,7 @@ export async function buildReport(input: BuildReportInput): Promise<BuildReportO
       findings,
       buildCrops: dropInfoCrops(buildCrops, findings.findings),
       figmaCrops: dropInfoCrops(figmaCrops, findings.findings),
+      figmaPreview,
       generatedAt: new Date().toLocaleString(),
     });
   }
@@ -117,7 +121,7 @@ export async function buildReport(input: BuildReportInput): Promise<BuildReportO
     runCopy,
     jsonPath,
     bytes: Buffer.byteLength(html),
-    images: { buildCrops: buildCount, figmaCrops: figmaCount, unresolved },
+    images: { buildCrops: buildCount, figmaCrops: figmaCount, figmaPreview: figmaPreview !== null, unresolved },
     summary:
       `${c.total} token deviations (${c.error} error, ${c.warn} warn, ${c.info} info) ` +
       `across ${c.elementsScanned} elements — ${reportPath}`,

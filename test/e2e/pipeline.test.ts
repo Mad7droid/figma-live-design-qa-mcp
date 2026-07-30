@@ -211,6 +211,30 @@ describe('report', () => {
     expect(html).toContain(`dismiss_finding(runId: "${id}"`);
   });
 
+  it('renders a direct Figma frame preview when one is supplied', async () => {
+    const { renderReport } = await import('../../src/report/render.js');
+    const { fixtureBuild, fixtureDesign } = await import('../fixtures/design.js');
+    const design = fixtureDesign('preview-test');
+    const build = fixtureBuild('preview-test');
+    const html = renderReport({
+      design,
+      build,
+      findings: {
+        runId: 'preview-test',
+        tiers: {},
+        notVerified: [],
+        counts: { error: 0, warn: 0, info: 0, total: 0, suppressed: 0, elementsScanned: 0 },
+        findings: [],
+      },
+      buildCrops: new Map(),
+      figmaCrops: new Map(),
+      figmaPreview: 'ZmFrZS1maWdtYS1wcmV2aWV3',
+      generatedAt: 'now',
+    });
+    expect(html).toContain('data:image/png;base64,ZmFrZS1maWdtYS1wcmV2aWV3');
+    expect(html).toContain('The selected Figma frame, rendered directly by the Figma API.');
+  });
+
   it('escapes page-derived text so the report cannot be corrupted by content', async () => {
     const { esc } = await import('../../src/report/render.js');
     expect(esc('<img src=x onerror=alert(1)>')).toBe(

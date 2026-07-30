@@ -50,4 +50,6 @@ If something is intentionally different, use `dismiss_finding` with the finding 
 
 ## Reports and files
 
-The HTML report is designed to be opened and shared on its own. Detailed run JSON lives under `DESIGN_QA_HOME/runs/<runId>/`; the default is `~/.figma-live-design-qa-mcp/runs/`.
+The HTML report is designed to be opened and shared on its own. It includes a full selected-frame image rendered through the Figma API, so image fills and placed images are included without Claude having to open the Figma editor in a browser. Detailed run JSON lives under `DESIGN_QA_HOME/runs/<runId>/`; the default is `~/.figma-live-design-qa-mcp/runs/`.
+
+If the full Figma preview is missing, the report can still contain findings and build crops. Check the Figma token permission and the server’s connection to `api.figma.com`.
